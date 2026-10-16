@@ -35,6 +35,7 @@ public sealed class MainForm : Form
     private readonly TextBox _customerIdText = new() { Width = 320 };
     private readonly TextBox _imeiText = new() { Width = 320 };
     private readonly TextBox _phoneText = new() { Width = 320 };
+    private readonly TextBox _simText = new() { Width = 320 };
     private readonly Button _findButton = new() { Text = "Find agreement", AutoSize = true };
     private readonly Button _clearButton = new() { Text = "Clear", AutoSize = true };
 
@@ -71,8 +72,8 @@ public sealed class MainForm : Form
 
         Text = "Agreement Cleaner - DEV / TEST only";
         StartPosition = FormStartPosition.CenterScreen;
-        MinimumSize = new Size(1000, 760);
-        Size = new Size(1150, 860);
+        MinimumSize = new Size(1000, 800);
+        Size = new Size(1150, 900);
         Font = new Font("Segoe UI", 9F);
 
         BuildLayout();
@@ -141,11 +142,12 @@ public sealed class MainForm : Form
         AddField(grid, 1, "Customer Id:", _customerIdText, "GUID, e.g. F2246EE9-46D9-8560-9E2A-46257ACD17B0");
         AddField(grid, 2, "IMEI:", _imeiText, "14 to 16 digits, e.g. 350142322650009");
         AddField(grid, 3, "Phone Number:", _phoneText, "Contact number, e.g. 068 920 9279 or +27689209279");
+        AddField(grid, 4, "SIM Number:", _simText, "SIM card number (ICCID), e.g. 8927000011760597297");
 
         var buttons = new FlowLayoutPanel { AutoSize = true, Margin = new Padding(0, 6, 0, 0) };
         buttons.Controls.Add(_findButton);
         buttons.Controls.Add(_clearButton);
-        grid.Controls.Add(buttons, 1, 4);
+        grid.Controls.Add(buttons, 1, 5);
 
         group.Controls.Add(grid);
         return group;
@@ -167,10 +169,11 @@ public sealed class MainForm : Form
 
         _matchesGrid.Columns.AddRange(
             TextColumn(nameof(AgreementInfo.AgreementId), "Agreement Id", 110),
-            TextColumn(nameof(AgreementInfo.CustomerId), "Customer Id", 290),
-            TextColumn(nameof(AgreementInfo.RentalContractId), "Rental Contract Id", 290),
+            TextColumn(nameof(AgreementInfo.CustomerId), "Customer Id", 260),
+            TextColumn(nameof(AgreementInfo.RentalContractId), "Rental Contract Id", 260),
             TextColumn(nameof(AgreementInfo.Imei), "IMEI", 150),
-            TextColumn(nameof(AgreementInfo.PhoneNumber), "Phone Number", 150));
+            TextColumn(nameof(AgreementInfo.SimNo), "SIM Number", 180),
+            TextColumn(nameof(AgreementInfo.PhoneNumber), "Phone Number", 130));
 
         group.Controls.Add(_matchesGrid);
         group.Controls.Add(bottom);
@@ -296,6 +299,7 @@ public sealed class MainForm : Form
         _customerIdText.Clear();
         _imeiText.Clear();
         _phoneText.Clear();
+        _simText.Clear();
         _matchesGrid.DataSource = null;
         _resultsGrid.Rows.Clear();
         _matchesInfoLabel.Text = "";
@@ -313,7 +317,8 @@ public sealed class MainForm : Form
     {
         if (_busy) return;
 
-        var validation = InputValidator.Validate(_agreementIdText.Text, _customerIdText.Text, _imeiText.Text, _phoneText.Text);
+        var validation = InputValidator.Validate(_agreementIdText.Text, _customerIdText.Text, _imeiText.Text, _phoneText.Text,
+            _simText.Text);
         if (!validation.IsValid)
         {
             MessageBox.Show(this, string.Join(Environment.NewLine, validation.Errors), "Please check the search fields",
@@ -329,7 +334,7 @@ public sealed class MainForm : Form
 
         SetBusy(true, $"Searching {environment.Name}...");
         AppendLog($"[{environment.Name}] Search: AgreementId={search.AgreementId ?? "-"}, CustomerId={search.CustomerId?.ToString() ?? "-"}, " +
-                  $"IMEI={search.Imei ?? "-"}, Phone={search.PhoneNumber ?? "-"}");
+                  $"IMEI={search.Imei ?? "-"}, Phone={search.PhoneNumber ?? "-"}, SIM={search.SimNumber ?? "-"}");
         try
         {
             var agreements = await _service.FindAgreementsAsync(environment, search);
@@ -530,7 +535,7 @@ public sealed class MainForm : Form
         foreach (var control in new Control[]
                  {
                      _environmentCombo, _checkScriptsButton, _openFolderButton, _agreementIdText, _customerIdText,
-                     _imeiText, _phoneText, _findButton, _clearButton, _matchesGrid
+                     _imeiText, _phoneText, _simText, _findButton, _clearButton, _matchesGrid
                  })
         {
             control.Enabled = !busy;

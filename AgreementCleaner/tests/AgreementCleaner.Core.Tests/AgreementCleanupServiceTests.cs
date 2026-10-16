@@ -25,8 +25,8 @@ public class AgreementCleanupServiceTests
 
     private static CleanupPlan Plan() => new(Customer, new[]
     {
-        new AgreementInfo(Contract1, "713", Customer, "350142322650009", "0689209279"),
-        new AgreementInfo(Contract2, "714", Customer, null, null)
+        new AgreementInfo(Contract1, "713", Customer, "350142322650009", "0689209279", "8927000011760597297"),
+        new AgreementInfo(Contract2, "714", Customer, null, null, null)
     });
 
     [Fact]
@@ -85,7 +85,7 @@ public class AgreementCleanupServiceTests
         sql.FindRows.Add((Contract1, "713", Customer, "2"));
         sql.FindRows.Add((Contract2, "714", Customer, null));
 
-        var selected = new AgreementInfo(Contract1, "713", Customer, null, null);
+        var selected = new AgreementInfo(Contract1, "713", Customer, null, null, null);
         var plan = await CreateService(sql).BuildPlanAsync(Env, selected);
 
         Assert.Equal(new[] { Contract1, Contract2 }, plan.RentalContractIds);
@@ -93,10 +93,23 @@ public class AgreementCleanupServiceTests
     }
 
     [Fact]
+    public async Task Search_passes_sim_number_and_reads_SimNo_column()
+    {
+        var sql = new FakeSqlExecutor { FindSimNo = "8927000011760597297" };
+        sql.FindRows.Add((Contract1, "713", Customer, null));
+
+        var found = await CreateService(sql).FindAgreementsAsync(Env,
+            new AgreementSearch(null, null, null, null, "8927000011760597297"));
+
+        Assert.Equal("8927000011760597297", sql.LastParameters.Single(p => p.Name == "@SimNumber").Value);
+        Assert.Equal("8927000011760597297", found.Single().SimNo);
+    }
+
+    [Fact]
     public async Task Plan_fails_when_customer_no_longer_exists()
     {
         var sql = new FakeSqlExecutor();
-        var selected = new AgreementInfo(Contract1, "713", Customer, null, null);
+        var selected = new AgreementInfo(Contract1, "713", Customer, null, null, null);
         await Assert.ThrowsAsync<InvalidOperationException>(() => CreateService(sql).BuildPlanAsync(Env, selected));
     }
 
@@ -106,7 +119,7 @@ public class AgreementCleanupServiceTests
         var table = new DataTable();
         table.Columns.Add("RentalContractId", typeof(Guid));
         var ex = Assert.Throws<InvalidOperationException>(() => AgreementCleanupService.ReadAgreements(table, "FindAgreement.sql"));
-        Assert.Contains("Missing: AgreementId, CustomerId, Imei, PhoneNumber", ex.Message);
+        Assert.Contains("Missing: AgreementId, CustomerId, Imei, PhoneNumber, SimNo", ex.Message);
     }
 
     /// <summary>Records every call instead of talking to SQL Server.</summary>
@@ -115,10 +128,13 @@ public class AgreementCleanupServiceTests
         public List<string> Calls { get; } = new();
         public List<(Guid Contract, string AgreementId, Guid Customer, string? Imei)> FindRows { get; } = new();
         public string? FailOn { get; set; }
+        public string? FindSimNo { get; set; }
+        public IReadOnlyList<ScriptParameter> LastParameters { get; private set; } = Array.Empty<ScriptParameter>();
 
         public Task<DataTable> QueryAsync(string connectionString, string sql, IReadOnlyList<ScriptParameter> parameters,
             CancellationToken cancellationToken)
         {
+            LastParameters = parameters;
             var customer = parameters.Single(p => p.Name == "@CustomerId").Value;
             Calls.Add($"find:@CustomerId={customer}");
 
@@ -128,8 +144,9 @@ public class AgreementCleanupServiceTests
             table.Columns.Add("CustomerId", typeof(Guid));
             table.Columns.Add("Imei", typeof(string));
             table.Columns.Add("PhoneNumber", typeof(string));
+            table.Columns.Add("SimNo", typeof(string));
             foreach (var row in FindRows)
-                table.Rows.Add(row.Contract, row.AgreementId, row.Customer, (object?)row.Imei ?? DBNull.Value, DBNull.Value);
+                table.Rows.Add(row.Contract, row.AgreementId, row.Customer, (object?)row.Imei ?? DBNull.Value, DBNull.Value, (object?)FindSimNo ?? DBNull.Value);
             return Task.FromResult(table);
         }
 

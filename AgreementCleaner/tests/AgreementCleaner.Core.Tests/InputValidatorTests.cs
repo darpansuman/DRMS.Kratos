@@ -36,6 +36,26 @@ public class InputValidatorTests
     }
 
     [Fact]
+    public void Sim_number_alone_is_enough_and_spaces_are_removed()
+    {
+        var result = InputValidator.Validate(null, null, null, null, " 8927 0000 1176 0597 297 ");
+        Assert.True(result.IsValid);
+        Assert.Equal("8927000011760597297", result.Search!.SimNumber);
+        Assert.Null(result.Search.AgreementId);
+    }
+
+    [Theory]
+    [InlineData("12345")]
+    [InlineData("89270000117605972AB")]
+    [InlineData("12345678901234567890123")]
+    public void Bad_sim_number_is_rejected(string value)
+    {
+        var result = InputValidator.Validate(null, null, null, null, value);
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Contains("SIM Number"));
+    }
+
+    [Fact]
     public void Bad_customer_id_is_rejected()
     {
         Assert.False(InputValidator.Validate(null, "not-a-guid", null, null).IsValid);

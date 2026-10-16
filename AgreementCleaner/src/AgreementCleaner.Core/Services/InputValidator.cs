@@ -19,8 +19,11 @@ public static class InputValidator
     public const int MaxImeiLength = 16;
     public const int MinPhoneLength = 7;
     public const int MaxPhoneLength = 15;
+    public const int MinSimLength = 10;
+    public const int MaxSimLength = 22;
 
-    public static ValidationResult Validate(string? agreementId, string? customerId, string? imei, string? phoneNumber)
+    public static ValidationResult Validate(string? agreementId, string? customerId, string? imei, string? phoneNumber,
+        string? simNumber = null)
     {
         var result = new ValidationResult();
 
@@ -71,14 +74,25 @@ public static class InputValidator
                 cleanPhone = value;
         }
 
-        if (result.Errors.Count == 0 &&
-            cleanAgreementId is null && cleanCustomerId is null && cleanImei is null && cleanPhone is null)
+        // SIM number (ICCID): digits only, spaces allowed. Matched with "contains", so part of the number works too.
+        string? cleanSim = null;
+        if (!string.IsNullOrWhiteSpace(simNumber))
         {
-            result.Errors.Add("Fill in at least one field: Agreement Id, Customer Id, IMEI or Phone Number.");
+            var value = new string(simNumber.Where(c => !char.IsWhiteSpace(c)).ToArray());
+            if (!value.All(char.IsAsciiDigit) || value.Length < MinSimLength || value.Length > MaxSimLength)
+                result.Errors.Add($"SIM Number must contain only digits and be {MinSimLength} to {MaxSimLength} digits long.");
+            else
+                cleanSim = value;
+        }
+
+        if (result.Errors.Count == 0 &&
+            cleanAgreementId is null && cleanCustomerId is null && cleanImei is null && cleanPhone is null && cleanSim is null)
+        {
+            result.Errors.Add("Fill in at least one field: Agreement Id, Customer Id, IMEI, Phone Number or SIM Number.");
         }
 
         if (result.Errors.Count == 0)
-            result.Search = new AgreementSearch(cleanAgreementId, cleanCustomerId, cleanImei, cleanPhone);
+            result.Search = new AgreementSearch(cleanAgreementId, cleanCustomerId, cleanImei, cleanPhone, cleanSim);
 
         return result;
     }

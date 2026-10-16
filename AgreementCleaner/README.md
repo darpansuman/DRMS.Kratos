@@ -10,7 +10,7 @@ It runs SQL scripts that live in a shared folder, so the scripts can be changed 
 ## 1. What it does
 
 1. You pick the environment (DEV or TEST).
-2. You type one or more of: **Agreement Id**, **Customer Id**, **IMEI**, **Phone Number**, and click **Find agreement**.
+2. You type one or more of: **Agreement Id**, **Customer Id**, **IMEI**, **Phone Number**, **SIM Number**, and click **Find agreement**.
 3. The app runs `FindAgreement.sql` and lists the matching agreements.
 4. You select one and click **Delete selected agreement...**.
 5. The app looks up **all** agreements of that customer and asks you to confirm, showing what will be removed.
@@ -136,9 +136,12 @@ Then copy the `publish` folder and edit `publish\appsettings.json`.
 | Customer Id | GUID (with or without `{}`) | `F2246EE9-46D9-8560-9E2A-46257ACD17B0` |
 | IMEI | 14–16 digits | `350142322650009` |
 | Phone Number | 7–15 digits; spaces, dashes, brackets and a leading `+` are removed | `068 920 9279` |
+| SIM Number | SIM card number (ICCID), 10–22 digits; spaces are removed | `8927000011760597297` |
 
 - Fill in **at least one** field. If you fill in more than one, **all** of them must match.
 - Phone numbers are matched with "contains", so `689209279` also finds `0689209279` and `27689209279`.
+- SIM numbers are also matched with "contains" (`ImeiSimDetails.SimNo LIKE '%...%'`), so you can type part of the number (at least 10 digits).
+- The list of matching agreements shows the IMEI, SIM Number and Phone Number linked to each agreement.
 - Press **Enter** to search.
 - Changing the environment clears the list of matches, so you can never delete in the wrong environment by accident.
 
@@ -167,7 +170,7 @@ Keep to these rules so the app can still run them:
 
    | Script | Parameters |
    |--------|-----------|
-   | `FindAgreement.sql` | `@AgreementId` (nvarchar), `@CustomerId` (uniqueidentifier), `@Imei` (nvarchar), `@PhoneNumber` (nvarchar, digits only). Empty fields arrive as `NULL`. |
+   | `FindAgreement.sql` | `@AgreementId` (nvarchar), `@CustomerId` (uniqueidentifier), `@Imei` (nvarchar), `@PhoneNumber` (nvarchar, digits only), `@SimNumber` (nvarchar, digits only). Empty fields arrive as `NULL`. |
    | `DeleteGateway.sql` | `@RentalContractId` (uniqueidentifier) |
    | `DeleteDRMS.sql` | `@CustomerId` (uniqueidentifier) |
    | `ClearCommsData.sql` | `@CustomerId` (uniqueidentifier) |
@@ -175,7 +178,7 @@ Keep to these rules so the app can still run them:
    Each script has a commented-out `DECLARE` block at the top – un-comment it to test the script in SSMS, then comment it out again before saving to the share.
 
 2. **`FindAgreement.sql` must return the columns**
-   `RentalContractId, AgreementId, CustomerId, Imei, PhoneNumber`.
+   `RentalContractId, AgreementId, CustomerId, Imei, PhoneNumber, SimNo`.
 
 3. **The delete scripts must end with a result set that has the columns `TableName, RowsAffected`.**
    The pattern used in all three scripts:

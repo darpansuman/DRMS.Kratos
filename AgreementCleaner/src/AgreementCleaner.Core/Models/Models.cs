@@ -3,7 +3,12 @@ namespace AgreementCleaner.Core.Models;
 /// <summary>
 /// The search values typed in by the user. A null value means the field was left empty.
 /// </summary>
-public sealed record AgreementSearch(string? AgreementId, Guid? CustomerId, string? Imei, string? PhoneNumber);
+public sealed record AgreementSearch(
+    string? AgreementId,
+    Guid? CustomerId,
+    string? Imei,
+    string? PhoneNumber,
+    string? SimNumber = null);
 
 /// <summary>One row returned by FindAgreement.sql.</summary>
 public sealed record AgreementInfo(
@@ -11,7 +16,8 @@ public sealed record AgreementInfo(
     string AgreementId,
     Guid CustomerId,
     string? Imei,
-    string? PhoneNumber);
+    string? PhoneNumber,
+    string? SimNo);
 
 /// <summary>Number of rows a script deleted (or updated) in one table.</summary>
 public sealed record TableCount(string TableName, int RowsAffected);

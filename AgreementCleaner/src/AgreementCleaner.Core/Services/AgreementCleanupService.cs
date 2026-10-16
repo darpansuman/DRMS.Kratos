@@ -33,7 +33,8 @@ public sealed class AgreementCleanupService
             new ScriptParameter("@AgreementId", SqlDbType.NVarChar, search.AgreementId, 50),
             new ScriptParameter("@CustomerId", SqlDbType.UniqueIdentifier, search.CustomerId),
             new ScriptParameter("@Imei", SqlDbType.NVarChar, search.Imei, 50),
-            new ScriptParameter("@PhoneNumber", SqlDbType.NVarChar, search.PhoneNumber, 50)
+            new ScriptParameter("@PhoneNumber", SqlDbType.NVarChar, search.PhoneNumber, 50),
+            new ScriptParameter("@SimNumber", SqlDbType.NVarChar, search.SimNumber, 50)
         };
 
         var table = await _sql.QueryAsync(environment.DrmsConnectionString, script.Text, parameters, cancellationToken);
@@ -154,7 +155,7 @@ public sealed class AgreementCleanupService
     /// <summary>Turns the FindAgreement result into objects, with a clear error if a column is missing.</summary>
     internal static IReadOnlyList<AgreementInfo> ReadAgreements(DataTable table, string scriptName)
     {
-        string[] required = { "RentalContractId", "AgreementId", "CustomerId", "Imei", "PhoneNumber" };
+        string[] required = { "RentalContractId", "AgreementId", "CustomerId", "Imei", "PhoneNumber", "SimNo" };
         var missing = required.Where(c => !table.Columns.Contains(c)).ToList();
         if (missing.Count > 0)
             throw new InvalidOperationException(
@@ -168,7 +169,8 @@ public sealed class AgreementCleanupService
                 Convert.ToString(row["AgreementId"]) ?? "",
                 ToGuid(row["CustomerId"], "CustomerId"),
                 row["Imei"] is DBNull ? null : Convert.ToString(row["Imei"]),
-                row["PhoneNumber"] is DBNull ? null : Convert.ToString(row["PhoneNumber"])));
+                row["PhoneNumber"] is DBNull ? null : Convert.ToString(row["PhoneNumber"]),
+                row["SimNo"] is DBNull ? null : Convert.ToString(row["SimNo"])));
         }
         return list;
     }
