@@ -1,0 +1,76 @@
+# ------------------------------------------------------------
+# Build output
+# ------------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm64/
+publish/
+artifacts/
+*.nupkg
+*.snupkg
+
+# ------------------------------------------------------------
+# Visual Studio / Rider / VS Code
+# ------------------------------------------------------------
+.vs/*
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.idea/
+*.sln.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ------------------------------------------------------------
+# Tests and code coverage
+# ------------------------------------------------------------
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+coverage*.json
+coverage*.xml
+*.coverage
+*.coveragexml
+
+# ------------------------------------------------------------
+# NuGet
+# ------------------------------------------------------------
+packages/
+*.nuget.props
+*.nuget.targets
+project.assets.json
+
+# ------------------------------------------------------------
+# Logs and temporary files
+# ------------------------------------------------------------
+logs/
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# ------------------------------------------------------------
+# Local settings with real connection strings - never commit these.
+# appsettings.json (with placeholder values) stays in the repo.
+# ------------------------------------------------------------
+appsettings.Local.json
+*.local.json
+
+# ------------------------------------------------------------
+# Operating system files
+# ------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
